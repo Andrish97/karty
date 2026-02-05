@@ -7,7 +7,7 @@
   <title>Generator kart Ja mam / Kto ma</title>
   <link rel="stylesheet" href="styles.css" />
   <script
-    src="https://cdn.tiny.cloud/1/rvwao9ib8mj0j8bfxbp4dml22na1rnlbgwu4wvfkitbd7dr3/tinymce/6/tinymce.min.js"
+    src="https://cdn.tiny.cloud/1/rvwao9ib8mj0j8bfxbp4dml22na1rnlbgwu4wvfkitbd7dr3//tinymce/6/tinymce.min.js"
     referrerpolicy="origin"
   ></script>
 </head>
@@ -46,140 +46,191 @@
 
         <div class="settings">
           <h2>Ustawienia</h2>
-          <div class="settings-grid">
+
+          <div class="settings-grid settings-grid--single">
             <label>
-              Kolor tekstu
-              <input id="text-color" type="color" />
-            </label>
-            <label class="checkbox">
-              <input id="text-shadow" type="checkbox" />
-              Cień tekstu
-            </label>
-            <label>
-              Czcionka
-              <input id="font-name" type="text" />
-            </label>
-            <label>
-              Rozmiar czcionki
-              <select id="font-size-mode">
-                <option value="auto">Auto</option>
-                <option value="fixed">Stały</option>
-              </select>
-            </label>
-            <label>
-              Rozmiar (pt)
-              <input id="font-size-fixed" type="number" min="8" max="72" />
+              Zestaw stylów
+              <select id="style-preset"></select>
             </label>
           </div>
 
-          <h3>Tło</h3>
-          <div class="settings-grid">
-            <label>
-              Tryb tła
-              <select id="card-bg-mode">
-                <option value="white">Białe</option>
-                <option value="color">Kolor</option>
-                <option value="gradient">Gradient</option>
-              </select>
-            </label>
-            <label>
-              Kolor tła
-              <input id="card-bg-color" type="color" />
-            </label>
-            <label>
-              Typ gradientu
-              <select id="card-bg-gradient-type">
-                <option value="linear">Liniowy</option>
-                <option value="radial">Radialny</option>
-              </select>
-            </label>
-            <label>
-              Kierunek gradientu
-              <select id="card-bg-gradient-direction">
-                <option value="vertical">Pionowy</option>
-                <option value="horizontal">Poziomy</option>
-                <option value="diagonal">Ukośny</option>
-              </select>
-            </label>
-            <label>
-              Kolor gradientu 1
-              <input id="card-bg-grad-1" type="color" />
-            </label>
-            <label>
-              Kolor gradientu 2
-              <input id="card-bg-grad-2" type="color" />
-            </label>
-          </div>
+          <details open>
+            <summary>Tekst</summary>
+            <div class="settings-grid">
+              <label>
+                Kolor tekstu
+                <input id="text-color" type="color" />
+              </label>
+              <label class="checkbox">
+                <input id="text-shadow" type="checkbox" />
+                Cień tekstu
+              </label>
+              <label>
+                Czcionka systemowa
+                <select id="font-name">
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Tahoma">Tahoma</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </label>
+              <label>
+                Google Font (nazwa)
+                <input id="font-google" type="text" placeholder="np. Roboto" />
+              </label>
+              <label>
+                Rozmiar czcionki
+                <select id="font-size-mode">
+                  <option value="auto">Auto</option>
+                  <option value="fixed">Stały</option>
+                </select>
+              </label>
+              <label>
+                Rozmiar (pt)
+                <input id="font-size-fixed" type="number" min="8" max="72" />
+              </label>
+              <label>
+                Wyrównanie tekstu
+                <select id="text-align">
+                  <option value="center">Środek</option>
+                  <option value="left">Lewo</option>
+                  <option value="right">Prawo</option>
+                </select>
+              </label>
+              <label>
+                Interlinia
+                <input id="text-line-height" type="number" min="1" max="1.6" step="0.05" />
+              </label>
+            </div>
+            <div class="font-status" id="font-status"></div>
+          </details>
 
-          <h3>Obramowanie</h3>
-          <div class="settings-grid">
-            <label class="checkbox">
-              <input id="card-border-enabled" type="checkbox" />
-              Obramowanie
-            </label>
-            <label>
-              Kolor obramowania
-              <input id="card-border-color" type="color" />
-            </label>
-            <label>
-              Grubość (px)
-              <input id="card-border-width" type="number" min="0" max="10" />
-            </label>
-            <label>
-              Styl obramowania
-              <select id="card-border-style">
-                <option value="solid">Ciągła</option>
-                <option value="dashed">Przerywana</option>
-                <option value="dotted">Kropkowana</option>
-              </select>
-            </label>
-          </div>
+          <details open>
+            <summary>Tło</summary>
+            <div class="settings-grid">
+              <label>
+                Tryb tła
+                <select id="card-bg-mode">
+                  <option value="white">Białe</option>
+                  <option value="color">Kolor</option>
+                  <option value="gradient">Gradient</option>
+                </select>
+              </label>
+              <label>
+                Kolor tła
+                <input id="card-bg-color" type="color" />
+              </label>
+              <label>
+                Typ gradientu
+                <select id="card-bg-gradient-type">
+                  <option value="linear">Liniowy</option>
+                  <option value="radial">Radialny</option>
+                </select>
+              </label>
+              <label>
+                Kierunek gradientu
+                <select id="card-bg-gradient-direction">
+                  <option value="vertical">Pionowy</option>
+                  <option value="horizontal">Poziomy</option>
+                  <option value="diagonal">Ukośny</option>
+                </select>
+              </label>
+              <label>
+                Kolor gradientu 1
+                <input id="card-bg-grad-1" type="color" />
+              </label>
+              <label>
+                Kolor gradientu 2
+                <input id="card-bg-grad-2" type="color" />
+              </label>
+            </div>
+          </details>
 
-          <h3>Linia środkowa</h3>
-          <div class="settings-grid">
-            <label class="checkbox">
-              <input id="card-line-enabled" type="checkbox" />
-              Linia środkowa
-            </label>
-            <label>
-              Kolor linii
-              <input id="card-line-color" type="color" />
-            </label>
-            <label>
-              Grubość (px)
-              <input id="card-line-width" type="number" min="0" max="10" />
-            </label>
-            <label>
-              Styl linii
-              <select id="card-line-style">
-                <option value="solid">Ciągła</option>
-                <option value="dashed">Przerywana</option>
-                <option value="dotted">Kropkowana</option>
-              </select>
-            </label>
-          </div>
+          <details open>
+            <summary>Obramowanie</summary>
+            <div class="settings-grid">
+              <label class="checkbox">
+                <input id="card-border-enabled" type="checkbox" />
+                Obramowanie
+              </label>
+              <label>
+                Kolor obramowania
+                <input id="card-border-color" type="color" />
+              </label>
+              <label>
+                Grubość (px)
+                <input id="card-border-width" type="number" min="0" max="12" />
+              </label>
+              <label>
+                Styl obramowania
+                <select id="card-border-style">
+                  <option value="solid">Ciągła</option>
+                  <option value="dashed">Przerywana</option>
+                  <option value="dotted">Kropkowana</option>
+                </select>
+              </label>
+            </div>
+          </details>
 
-          <h3>Efekty i druk</h3>
-          <div class="settings-grid">
-            <label class="checkbox">
-              <input id="card-shadow-enabled" type="checkbox" />
-              Cień karty
-            </label>
-            <label class="checkbox">
-              <input id="card-rounded-enabled" type="checkbox" />
-              Zaokrąglenie
-            </label>
-            <label class="checkbox">
-              <input id="show-cutlines" type="checkbox" />
-              Linie cięcia
-            </label>
-          </div>
+          <details open>
+            <summary>Linia środkowa</summary>
+            <div class="settings-grid">
+              <label class="checkbox">
+                <input id="card-line-enabled" type="checkbox" />
+                Linia środkowa
+              </label>
+              <label>
+                Kolor linii
+                <input id="card-line-color" type="color" />
+              </label>
+              <label>
+                Grubość (px)
+                <input id="card-line-width" type="number" min="0" max="12" />
+              </label>
+              <label>
+                Styl linii
+                <select id="card-line-style">
+                  <option value="solid">Ciągła</option>
+                  <option value="dashed">Przerywana</option>
+                  <option value="dotted">Kropkowana</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
+          <details open>
+            <summary>Efekty i druk</summary>
+            <div class="settings-grid">
+              <label class="checkbox">
+                <input id="card-shadow-enabled" type="checkbox" />
+                Cień karty
+              </label>
+              <label class="checkbox">
+                <input id="card-rounded-enabled" type="checkbox" />
+                Zaokrąglenie karty
+              </label>
+              <label>
+                Promień karty (mm)
+                <input id="card-radius" type="number" min="0" max="10" step="0.5" />
+              </label>
+              <label>
+                Promień obrazków (px)
+                <input id="image-radius" type="number" min="0" max="30" step="1" />
+              </label>
+              <label class="checkbox">
+                <input id="show-cutlines" type="checkbox" />
+                Linie cięcia
+              </label>
+            </div>
+          </details>
         </div>
       </section>
 
       <section class="panel preview">
         <h2>Podgląd</h2>
-        <iframe id="preview-frame" title="Podgląd kart" sandbox="allow-same-origin"></iframe>
+        <iframe id="preview-frame" title="Podgląd kart"></iframe>
       </section>
     </main>
   </div>

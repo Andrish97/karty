@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ja mam / Kto ma — Generator kart (no-backend)</title>
+
+  <!-- TinyMCE (z Twoim API key) -->
+  <script src="https://cdn.tiny.cloud/1/rvwao9ib8mj0j8bfxbp4dml22na1rnlbgwu4wvfkitbd7dr3/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f16;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --line:#243041;
+      --btn:#1f2937;
+      --btn2:#111827;
+      --accent:#60a5fa;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 10% 0%, #14213d 0%, var(--bg) 60%);
+      color:var(--text);
+    }
+    header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      position: sticky; top:0; z-index:10;
+    }
+    header .title{
+      font-weight:800;
+      letter-spacing:0.6px;
+    }
+    header .actions{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    button, .filebtn{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(31,41,55,0.95), rgba(17,24,39,0.95));
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:650;
+    }
+    button:hover, .filebtn:hover{ border-color:#3b4b62; }
+    button.primary{
+      border-color: rgba(96,165,250,0.55);
+      box-shadow: 0 0 0 2px rgba(96,165,250,0.15) inset;
+    }
+    .wrap{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:14px;
+      padding:14px;
+      max-width: 1400px;
+      margin:0 auto;
+    }
+    .panel{
+      background: rgba(17,24,39,0.85);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .panel h2{
+      margin:0;
+      padding:12px 12px;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color: var(--muted);
+      border-bottom:1px solid var(--line);
+      background: rgba(15,23,42,0.6);
+    }
+    .panel .content{ padding:12px; }
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      margin-top:10px;
+    }
+    label{
+      display:flex; align-items:center; gap:8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    input[type="number"]{
+      width:90px;
+      background: rgba(15,23,42,0.7);
+      border:1px solid var(--line);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      outline:none;
+    }
+    .hint{ color: var(--muted); font-size:13px; margin-top:8px; line-height:1.35; }
+    .error{ color:#fca5a5; font-size:13px; margin-top:8px; }
+
+    iframe{
+      width:100%;
+      height: calc(100vh - 92px);
+      border:0;
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+
+    /* Ukryty miernik do auto-fit */
+    #measurer{
+      position:fixed;
+      left:-99999px; top:-99999px;
+      overflow:hidden;
+      visibility:hidden;
+      white-space:normal;
+    }
+
+    /* Małe poprawki TinyMCE */
+    .tox.tox-tinymce{
+      border-radius: 12px !important;
+      border-color: var(--line) !important;
+      overflow:hidden;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="title">JA MAM / KTO MA — generator (frontend only)</div>
+  <div class="actions">
+    <button id="btnUpdate" class="primary" type="button">Odśwież podgląd</button>
+    <button id="btnPrint" type="button">Drukuj / PDF</button>
+    <button id="btnExport" type="button">Eksport projektu (.json)</button>
+    <label class="filebtn" style="padding:8px 10px;border-radius:10px;">
+      Import projektu
+      <input id="fileImport" type="file" accept="application/json" style="display:none;">
+    </label>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <h2>Teksty (Enter = nowy element)</h2>
+    <div class="content">
+      <textarea id="editor"></textarea>
+
+      <div class="row">
+        <label>Min font (px) <input id="minFont" type="number" value="10" min="6" max="40"></label>
+        <label>Max font (px) <input id="maxFont" type="number" value="60" min="10" max="120"></label>
+      </div>
+
+      <div class="hint">
+        • Każda linia to osobny element („Ja mam …”) ✅<br>
+        • Formatowanie B/I/U działa w obrębie linii.<br>
+        • Eksport PDF: kliknij <b>Drukuj / PDF</b> → wybierz „Zapisz jako PDF”.
+      </div>
+
+      <div id="err" class="error" style="display:none;"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Podgląd wydruku (A4 landscape, 4×2)</h2>
+    <div class="content" style="padding:12px;">
+      <iframe id="preview"></iframe>
+    </div>
+  </section>
+</div>
+
+<div id="measurer"></div>
+
+<script>
+  // ----------------------------
+  // TinyMCE init: Enter = <br> (nowy element)
+  // ----------------------------
+  tinymce.init({
+    selector: '#editor',
+    menubar: false,
+    plugins: 'lists',
+    toolbar: 'bold italic underline | undo redo | removeformat',
+    forced_root_block: false,
+    force_br_newlines: true,
+    force_p_newlines: false,
+    convert_newlines_to_brs: true,
+    branding: false,
+    statusbar: false,
+    height: 360,
+    setup: (ed) => {
+      // Szybkie odświeżanie po zmianach (z małym debounce)
+      let t = null;
+      const schedule = () => {
+        clearTimeout(t);
+        t = setTimeout(() => refreshPreview(), 250);
+      };
+      ed.on('Change KeyUp SetContent Undo Redo', schedule);
+    }
+  });
+
+  // ----------------------------
+  // Helpers
+  // ----------------------------
+  const $ = (id) => document.getElementById(id);
+
+  function showErr(msg){
+    const el = $('err');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  // Extract lines where each BR means "new item"
+  function extractItemsHtmlFromTiny(html) {
+    // Normalize pasted paragraphs to <br>
+    html = html
+      .replace(/<\/p>\s*<p[^>]*>/gi, '<br>')
+      .replace(/<\/?p[^>]*>/gi, '');
+
+    const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
+    const root = doc.body.firstElementChild;
+
+    const token = '[[BR]]';
+    root.querySelectorAll('br').forEach(br => br.replaceWith(doc.createTextNode(token)));
+
+    // innerHTML preserves <strong>/<em>/<u>/<span ...>
+    const raw = root.innerHTML;
+
+    return raw
+      .split(token)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  // Build cards: top=item[i], bottom=item[(i+1)%n] + '?'
+  function buildCards(items){
+    const n = items.length;
+    if (n < 2) throw new Error('Potrzebujesz minimum 2 linie (2 elementy).');
+    return items.map((top, i) => ({
+      topHtml: top,
+      bottomHtml: `${items[(i + 1) % n]}?`
+    }));
+  }
+
+  // Auto-fit font size for a given half-box by measuring real HTML rendering (B/I/U safe)
+  function fitFontPxForHalf({ halfBoxPxW, halfBoxPxH, fontFamily, htmlLine }) {
+    const min = clampInt(parseInt($('minFont').value || '10', 10), 6, 80);
+    const max = clampInt(parseInt($('maxFont').value || '60', 10), 10, 200);
+
+    const meas = $('measurer');
+    meas.style.width = halfBoxPxW + 'px';
+    meas.style.height = halfBoxPxH + 'px';
+    meas.style.fontFamily = fontFamily;
+    meas.style.lineHeight = '1.12';
+    meas.style.padding = '0';
+    meas.style.margin = '0';
+
+    // Uwaga: w PS1 font był dobierany “globalnie” na podstawie najdłuższych linii.
+    // Tu dobieramy na podstawie najgorszego przypadku, ale dalej "globalnie".
+    meas.innerHTML = `<div class="line">${htmlLine}</div>`;
+
+    const fits = (px) => {
+      meas.style.fontSize = px + 'px';
+      return meas.scrollWidth <= meas.clientWidth && meas.scrollHeight <= meas.clientHeight;
+    };
+
+    let lo = min, hi = max, best = min;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (fits(mid)) { best = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return best;
+  }
+
+  function clampInt(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  // ----------------------------
+  // Print layout renderer (A4 landscape, 4x2)
+  // ----------------------------
+  function buildPrintCss(fontPx){
+    // Wzorowane na PS1: A4 landscape, 0 margins, 4x2, 8 kart/strona.
+    return `
+      @page { size: A4 landscape; margin: 0; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+
+      /* Strona */
+      .page {
+        width: 297mm;
+        height: 210mm;
+        page-break-after: always;
+        position: relative;
+      }
+
+      /* Siatka 4x2 */
+      .grid {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+      }
+
+      /* Karta */
+      .card {
+        border: 1px solid #000;
+        position: relative;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .card-inner {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+      }
+
+      .half {
+        display: grid;
+        grid-template-columns: 22% 78%;
+        align-items: center;
+        padding: 5mm 5mm;
+      }
+
+      .label {
+        font-weight: 800;
+        font-size: 13pt;
+        line-height: 1.05;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .value {
+        font-size: ${fontPx}px;
+        line-height: 1.12;
+        font-weight: 700;
+        word-break: break-word;
+        overflow: hidden;
+      }
+
+      /* Linia podziału pośrodku */
+      .half.bottom { border-top: 1px solid #000; }
+
+      /* Wartość: zachowaj inline B/I/U z TinyMCE */
+      .value strong { font-weight: 900; }
+      .value em { font-style: italic; }
+      .value u { text-decoration: underline; }
+
+      /* Minimalnie ogranicz dziwne style wklejane */
+      .value span[style] { }
+    `;
+  }
+
+  function buildPrintHtml(cards, fontPx){
+    const CARDS_PER_PAGE = 8;
+
+    let pages = [];
+    for (let i = 0; i < cards.length; i += CARDS_PER_PAGE) {
+      const slice = cards.slice(i, i + CARDS_PER_PAGE);
+
+      // Dobić puste karty do pełnej strony (jak w wielu generatorach)
+      while (slice.length < CARDS_PER_PAGE) {
+        slice.push({ topHtml: '&nbsp;', bottomHtml: '&nbsp;' });
+      }
+
+      const cells = slice.map(c => `
+        <div class="card">
+          <div class="card-inner">
+            <div class="half top">
+              <div class="label">JA MAM</div>
+              <div class="value">${c.topHtml}</div>
+            </div>
+            <div class="half bottom">
+              <div class="label">KTO MA</div>
+              <div class="value">${c.bottomHtml}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      pages.push(`<div class="page"><div class="grid">${cells}</div></div>`);
+    }
+
+    const css = buildPrintCss(fontPx);
+    return `
+      <!doctype html>
+      <html lang="pl">
+      <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <title>Wydruk kart</title>
+        <style>${css}</style>
+      </head>
+      <body>${pages.join('')}</body>
+      </html>
+    `;
+  }
+
+  // ----------------------------
+  // Main: preview + print
+  // ----------------------------
+  function getState(){
+    const ed = tinymce.get('editor');
+    const html = ed ? ed.getContent({ format: 'html' }) : '';
+    return { html };
+  }
+
+  function computeGlobalFontPx(itemsHtml){
+    // Mierzymy na "najgorszym przypadku" dla pół-karty:
+    // Skoro w druku bazujemy na mm, w pomiarze przyjmijmy stabilny box w px dla preview.
+    // Tu bierzemy rozsądny przybliżony box: 360x170 px (działa dobrze w praktyce),
+    // a docelowo i tak wydruk domknie się w ten sam sposób.
+    const halfW = 360;
+    const halfH = 170;
+    const fontFamily = 'Arial, Helvetica, sans-serif';
+
+    // Szukamy minimalnego fontu, który pasuje dla wszystkich elementów (jak w PS1 “globalnie”)
+    let best = Infinity;
+    for (const html of itemsHtml) {
+      const px = fitFontPxForHalf({
+        halfBoxPxW: halfW,
+        halfBoxPxH: halfH,
+        fontFamily,
+        htmlLine: html
+      });
+      best = Math.min(best, px);
+    }
+    if (!isFinite(best) || best < 6) best = 12;
+    return best;
+  }
+
+  function refreshPreview(){
+    try{
+      showErr('');
+
+      const st = getState();
+      const items = extractItemsHtmlFromTiny(st.html);
+      const cards = buildCards(items);
+
+      const fontPx = computeGlobalFontPx(items);
+      const printHtml = buildPrintHtml(cards, fontPx);
+
+      $('preview').srcdoc = printHtml;
+    }catch(e){
+      showErr(e?.message || String(e));
+    }
+  }
+
+  function printPdf(){
+    try{
+      const iframe = $('preview');
+      // Otwórz wydruk w nowym oknie i drukuj
+      const w = window.open('', '_blank');
+      if (!w) throw new Error('Przeglądarka zablokowała popup. Zezwól na wyskakujące okna.');
+
+      // Weź aktualny srcdoc
+      const docHtml = iframe.srcdoc || '';
+      w.document.open();
+      w.document.write(docHtml);
+      w.document.close();
+
+      // Daj chwilę na render i drukuj
+      w.focus();
+      setTimeout(() => w.print(), 250);
+    }catch(e){
+      showErr(e?.message || String(e));
+    }
+  }
+
+  // ----------------------------
+  // Import/Export projektu (no backend)
+  // ----------------------------
+  function exportProject(){
+    const ed = tinymce.get('editor');
+    const html = ed ? ed.getContent({ format: 'html' }) : '';
+
+    const payload = {
+      version: 1,
+      kind: "jamam-web",
+      createdAt: new Date().toISOString(),
+      editorHtml: html,
+      settings: {
+        minFontPx: parseInt($('minFont').value || '10', 10),
+        maxFontPx: parseInt($('maxFont').value || '60', 10)
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'projekt-ja-mam-kto-ma.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function importProjectFile(file){
+    const txt = await file.text();
+    const payload = JSON.parse(txt);
+
+    if (!payload || payload.kind !== 'jamam-web') {
+      throw new Error('To nie wygląda na projekt z tego generatora (kind=jamam-web).');
+    }
+
+    $('minFont').value = payload?.settings?.minFontPx ?? 10;
+    $('maxFont').value = payload?.settings?.maxFontPx ?? 60;
+
+    const ed = tinymce.get('editor');
+    if (ed) ed.setContent(payload.editorHtml || '');
+    refreshPreview();
+  }
+
+  // ----------------------------
+  // Wire UI
+  // ----------------------------
+  $('btnUpdate').addEventListener('click', refreshPreview);
+  $('btnPrint').addEventListener('click', printPdf);
+  $('btnExport').addEventListener('click', exportProject);
+  $('fileImport').addEventListener('change', async (e) => {
+    try{
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      await importProjectFile(f);
+    }catch(err){
+      showErr(err?.message || String(err));
+    }finally{
+      e.target.value = '';
+    }
+  });
+
+  // Start: seed content
+  window.addEventListener('load', () => {
+    // Poczekaj aż TinyMCE wstanie
+    const t = setInterval(() => {
+      const ed = tinymce.get('editor');
+      if (!ed) return;
+      clearInterval(t);
+
+      // Demo (każda linia = element)
+      ed.setContent([
+        'ALA',
+        '<strong>MA</strong> KOTA',
+        'PIES',
+        '<em>RYBA</em>',
+        '<u>SMOK</u>',
+        'SŁOŃ',
+        'JEŻ',
+        'LIS'
+      ].join('<br>'));
+
+      refreshPreview();
+    }, 60);
+  });
+</script>
+</body>
+</html>

@@ -1968,10 +1968,21 @@ function setupPreviewControls() {
   }
   if (elements.mobilePreviewToggle && elements.previewPanel) {
     elements.mobilePreviewToggle.addEventListener("click", () => {
-      elements.previewPanel.classList.toggle("is-open");
+      const isOpen = elements.previewPanel.classList.toggle("is-open");
+      document.body.classList.toggle("mobile-preview-open", isOpen);
+      elements.mobilePreviewToggle.textContent = isOpen ? "Edytuj" : "Podgląd";
+      elements.mobilePreviewToggle.setAttribute("aria-pressed", String(isOpen));
     });
   }
   window.addEventListener("resize", () => {
+    if (window.innerWidth > 980) {
+      document.body.classList.remove("mobile-preview-open");
+      elements.previewPanel.classList.remove("is-open");
+      if (elements.mobilePreviewToggle) {
+        elements.mobilePreviewToggle.textContent = "Podgląd";
+        elements.mobilePreviewToggle.setAttribute("aria-pressed", "false");
+      }
+    }
     fitPreviewToWidth();
   });
 }

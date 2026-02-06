@@ -451,7 +451,7 @@ body {
   border: none;
   background: #fff;
   transform-origin: top left;
-  flex: 1;
+  flex: 0 0 auto;
   pointer-events: none;
 }
 

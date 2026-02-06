@@ -14,6 +14,8 @@ const state = {
   mmToPx: null,
   previewTimer: null,
   loadedGoogleFonts: new Set(),
+  previewBaseWidth: null,
+  previewBaseHeight: null,
 };
 
 const elements = {
@@ -803,7 +805,8 @@ function updateEditorFont() {
   const settings = getSettingsForMode("text");
   const fontFamily = getFontFamily(settings);
   editor.getBody().style.fontFamily = fontFamily;
-  editor.getBody().style.color = settings.textColorHex;
+  const editorColor = getCurrentTheme() === "dark" ? "#ffffff" : "#000000";
+  editor.getBody().style.color = editorColor;
 }
 
 function setupTabs() {
@@ -1548,21 +1551,23 @@ function renderPreview() {
   const css = buildCss(settings, fontPt);
   const html = buildFullHtml(css, body, settings);
   elements.previewFrame.srcdoc = html;
+  elements.previewFrame.onload = () => {
+    updatePreviewFrameSize();
+    applyPreviewScale(elements.previewScale.value);
+  };
 }
 
 function applyPreviewScale(scaleValue) {
   const scale = clamp(Number(scaleValue) || 100, 60, 140) / 100;
   elements.previewScaleValue.textContent = `${Math.round(scale * 100)}%`;
-  elements.previewFrame.style.transform = "none";
-  elements.previewFrame.style.width = `${scale * 100}%`;
-  elements.previewFrame.style.height = `${scale * 100}%`;
+  elements.previewFrame.style.transform = `scale(${scale})`;
 }
 
 function fitPreviewToWidth() {
   if (!state.mmToPx) {
     state.mmToPx = computeMmToPx();
   }
-  const pageWidthPx = 297 * state.mmToPx;
+  const pageWidthPx = state.previewBaseWidth || 297 * state.mmToPx;
   const viewportStyles = getComputedStyle(elements.previewViewport);
   const paddingX =
     parseFloat(viewportStyles.paddingLeft) + parseFloat(viewportStyles.paddingRight);
@@ -1570,6 +1575,23 @@ function fitPreviewToWidth() {
   const scale = clamp((viewportWidth / pageWidthPx) * 100, 60, 140);
   elements.previewScale.value = Math.round(scale);
   applyPreviewScale(scale);
+}
+
+function updatePreviewFrameSize() {
+  const previewDocument = elements.previewFrame.contentDocument;
+  if (!previewDocument) {
+    return;
+  }
+  const { body, documentElement } = previewDocument;
+  const width = Math.max(body.scrollWidth, documentElement.scrollWidth);
+  const height = Math.max(body.scrollHeight, documentElement.scrollHeight);
+  if (!width || !height) {
+    return;
+  }
+  state.previewBaseWidth = width;
+  state.previewBaseHeight = height;
+  elements.previewFrame.style.width = `${width}px`;
+  elements.previewFrame.style.height = `${height}px`;
 }
 
 function renderImageList() {
